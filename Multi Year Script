@@ -1,0 +1,221 @@
+Attribute VB_Name = "Module1"
+Sub ticker()
+
+'command for looping through worksheets from class / close at end. ws each cell & range if range reference
+
+For Each ws In Worksheets
+
+'create your headers
+
+    ws.Cells(1, 9).Value = "Ticker"
+    ws.Cells(1, 10).Value = "Yearly Change"
+    ws.Cells(1, 11).Value = "Percent Change"
+    ws.Cells(1, 12).Value = "Total Stock Volume"
+    
+    ws.Cells(2, 15).Value = "Greatest % Increase"
+    ws.Cells(3, 15).Value = "Greatest % Decrease"
+    ws.Cells(4, 15).Value = "Greatest Total Volume"
+    
+    ws.Cells(1, 16).Value = "Ticker"
+    ws.Cells(1, 17).Value = "Value"
+
+'define the variables to find your 4 columns, ticker change, yearly change, percent change, total volume
+
+    Dim ticker_symbol As String
+    Dim lastRow As Double
+    Dim startRow As Integer
+    
+    Dim YearlyChange As Double
+    Dim YearOpenPrice As Double
+    Dim YearClosePrice As Double
+    Dim PercentChange As Double
+    
+    Dim Vol As Double
+    
+    
+    startRow = 2
+    YearChange = 0
+    YearOpenPrice = 0
+    YearClosePrice = 0
+    PercentChange = 0
+    Vol = 0
+     
+'command from class that identifies the last occupied cell that was specified (using rows, can be cols) in your data
+
+    lastRow = ws.Cells(Rows.Count, 1).End(xlUp).Row
+    
+        'MsgBox (lastRow)
+
+'create your for loop to loop through each row
+
+    For I = 2 To lastRow
+    If YearOpenPrice = 0 Then
+    YearOpenPrice = Cells(I, 3).Value
+    End If
+    
+    'from row2 to last row - > every row in your sheet
+        If (ws.Cells(I + 1, 1).Value <> ws.Cells(I, 1).Value) Then
+                
+'find unique tickers
+
+               ticker_symbol = ws.Cells(I, 1).Value
+                   
+                ws.Cells(startRow, 9).Value = ticker_symbol
+                                
+                Vol = Vol + Cells(I, 7).Value
+                
+'find volume associated with that unique tickers
+
+                ws.Cells(startRow, 12).Value = Vol
+                
+                Vol = 0
+                
+'yearly change calculation
+
+                YearClosePrice = ws.Cells(I, 6).Value
+              
+                YearlyChange = YearClosePrice - YearOpenPrice
+                
+                ws.Cells(startRow, 10).Value = YearlyChange
+                
+ 'find percent change
+ 
+            If YearOpenPrice = 0 Then
+                    
+                PercentChange = 0
+                 
+                ws.Cells(startRow, 11).Value = PercentChange
+                 
+             ElseIf YearOpenPrice <> 0 Then
+             
+                PercentChange = (YearlyChange / YearOpenPrice)
+                
+                ws.Cells(startRow, 11).Value = PercentChange
+            
+ 'Percent Format
+ 
+                ws.Cells(startRow, 11).NumberFormat = "0.00%"
+                
+            End If
+          
+'conditional formatting - positive / negative change
+          
+            If YearlyChange >= 0 Then
+            
+                ws.Cells(startRow, 10).Interior.ColorIndex = 4
+                
+             Else
+             
+                ws.Cells(startRow, 10).Interior.ColorIndex = 3
+                
+            End If
+            
+                 startRow = startRow + 1
+                 
+                YearOpenPrice = 0
+                
+            Else
+     
+'total stock volume calculation
+
+                Vol = Vol + Cells(I, 7).Value
+                    
+'if the cells in row 3 equal row 2 then your ticker info stays (because they're equal) then your volume needs to be added to the starting volume in column 7
+            
+            End If
+    
+   Next I 'go to the next row
+
+'New table to look at so new values to populate and cycle through. Need space to run in new separate condition
+
+'Define my variables
+
+Dim SummaryRow As Integer
+Dim GreatestPIncrease As Double
+Dim GreatestPDecrease As Double
+Dim GreatestTotVol As Double
+
+Dim GreatPI As String
+Dim GreatPD As String
+Dim GreatPTV As String
+
+'currently no values assigned since doubles
+
+GreatestPIncrease = 0
+GreatestPDecrease = 0
+GreatestTotVol = 0
+
+'same as above command to lop through rows but this time starting on column 12, above part of script loops through last row of first part of data. To create a whole new table, need to change loop column to where the table will go through the last column
+
+SummaryRow = ws.Cells(Rows.Count, 12).End(xlUp).Row
+
+'loop to find the summary table info
+    
+        For I = 2 To SummaryRow
+
+'find greatest percent increase out of percent change column
+
+                If GreatestPIncrease < Cells(I, 11).Value Then
+                
+                    GreatestPIncrease = ws.Cells(I, 11).Value
+                    
+                    ws.Cells(2, 17).Value = GreatestPIncrease
+                    
+                    
+                    GreatestPI = ws.Cells(I, 9).Value
+                    
+'Percent format
+                    
+                    ws.Cells(2, 17).NumberFormat = "0.00%"
+                    
+                    ws.Cells(2, 16).Value = GreatestPI
+                    
+                    
+'find greatest percent decrease out of percent change column
+
+                ElseIf GreatestPDecrease > ws.Cells(I, 11).Value Then
+        
+                    GreatestPDecrease = ws.Cells(I, 11).Value
+                    
+                    ws.Cells(3, 17).Value = GreatestPDecrease
+                    
+                    GreatestPD = ws.Cells(I, 9).Value
+                     
+'Percent format
+                    
+                    ws.Cells(3, 17).NumberFormat = "0.00%"
+                    
+                    ws.Cells(3, 16).Value = GreatestPD
+                    
+'find greatest total volume
+
+                ElseIf GreatestTotVol < ws.Cells(I, 12).Value Then
+            
+                    GreatestTotVol = ws.Cells(I, 12).Value
+                    
+                    GreatestPTV = ws.Cells(I, 9).Value
+                    
+                    ws.Cells(4, 16).Value = GreatestPTV
+                
+                    ws.Cells(4, 17).Value = GreatestTotVol
+                    
+                    
+        End If
+            
+'ticker associated with "greatest" will be a in ticker column
+
+            
+        Next I
+
+'end command to loop through next worksheet
+   Next ws
+   
+End Sub
+
+
+
+
+
+
+
+
